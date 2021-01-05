@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
 using AdvancedMediaPlayer.Models;
 
-namespace AdvancedMediaPlayer
+namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
-    internal static class AMPConst
+    internal static class MediaPlayerConst
     {
 
         #region Constants & Statics

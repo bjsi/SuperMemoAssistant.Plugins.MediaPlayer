@@ -1,3 +1,11 @@
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+using SuperMemoAssistant.Interop.SuperMemo.Content.Models;
+using SuperMemoAssistant.Services;
+using SuperMemoAssistant.Services.UI.Configuration;
+using SuperMemoAssistant.Sys.ComponentModel;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
 
@@ -43,7 +51,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         [Field(Name = "Default view mode")]
         [SelectFrom(typeof(ViewMode),
                     SelectionType = SelectionType.ComboBox)]
-        public ViewMode DefaultViewMode { get; set; } = AMPConst.DefaultViewMode;
+        public ViewMode DefaultViewMode { get; set; } = MediaPlayerConst.DefaultViewMode;
 
         // TODO: Create sane defaults
         public double WindowTop { get; set; } = 100;
