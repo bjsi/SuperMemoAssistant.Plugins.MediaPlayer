@@ -55,7 +55,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         public override string ToString()
         {
-            return "Advanced Media Player";
+            return "Media Player";
         }
 
         #endregion
