@@ -17,7 +17,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
     {
         #region Constructors
 
-        // TODO: Subtitles
         // TODO: Support playlists
         public YouTubeMediaElement()
         {
@@ -31,10 +30,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
         [JsonProperty(PropertyName = "ID")]
         public string Id { get; set; }
 
+        public string Url => YTConst.VidUrlPrefix + Id;
+
         #endregion
 
-
-        #region Methods
 
         public static async Task<CreationResult> Create(
           string urlOrId,
@@ -45,8 +44,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
           ViewMode viewMode = MediaPlayerConst.DefaultViewMode,
           bool shouldDisplay = true)
         {
-            // TODO: Only do this check on import, not
-            // for every extract
             JObject metadata = await YdlUtils.GetYouTubeVideoMetadata(urlOrId);
             if (metadata == null || string.IsNullOrWhiteSpace((string)metadata["id"]))
             {
@@ -93,10 +90,69 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                                  elementHtml)
                 .WithParent(parentElement)
                 .WithTitle(title)
-                .WithPriority(AMPState.Instance.Config.DefaultExtractPriority)
+                .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
                 .WithReference(
                   r => r.WithTitle(title)
                         .WithAuthor($"{uploader} (id={uploaderId})")
+                        .WithDate(creationDate)
+                        .WithSource("YouTube")
+                        .WithLink($"https://www.youtube.com/watch?v=" + youtubeId)
+                );
+
+            if (shouldDisplay == false)
+                elemBuilder = elemBuilder.DoNotDisplay();
+
+            return Svc.SM.Registry.Element.Add(out _, ElemCreationFlags.CreateSubfolders, elemBuilder)
+              ? CreationResult.Ok
+              : CreationResult.FailCannotCreateElement;
+        }
+
+        public static CreationResult Create(
+                int parentElementId,
+                double startTime,
+                double endTime,
+                double watchPoint,
+                ViewMode viewMode)
+        {
+
+            var html = ContextEx.GetCurrentElementContent();
+            var refs = ReferenceParser.GetReferences(html);
+            if (refs == null)
+                return;
+
+            string youtubeId = this.Id;
+            string title = refs.Title;
+            string uploader = refs.Author;
+            string creationDate = refs.Date;
+
+            ytEl = new YouTubeMediaElement
+            {
+                Id = youtubeId,
+                StartTime = startTime,
+                EndTime = endTime,
+                WatchPoint = watchPoint,
+                ViewMode = viewMode,
+            };
+
+            string elementHtml = string.Format(CultureInfo.InvariantCulture,
+                                               AMPConst.YouTubeElementFormat,
+                                               title,
+                                               ytEl.GetJsonB64());
+
+            IElement parentElement =
+              parentElementId > 0
+                ? Svc.SM.Registry.Element[parentElementId]
+                : null;
+
+            var elemBuilder =
+              new ElementBuilder(ElementType.Topic,
+                                 elementHtml)
+                .WithParent(parentElement)
+                .WithTitle(title)
+                .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
+                .WithReference(
+                  r => r.WithTitle(title)
+                        .WithAuthor(uploader)
                         .WithDate(creationDate)
                         .WithSource("YouTube")
                         .WithLink($"https://www.youtube.com/watch?v=" + youtubeId)
@@ -116,8 +172,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             if (string.IsNullOrWhiteSpace(elText))
                 return null;
 
-            // TODO Separate regexes
-            var reRes = AMPConst.RE_Element.Match(elText);
+            var reRes = MediaPlayerConst.RE_YouTubeElement.Match(elText);
 
             if (reRes.Success == false)
                 return null;
@@ -146,64 +201,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             }
         }
 
-        // TODO: Move into base class and add Regex to params
         private string UpdateHtml(string html)
         {
             string newElementDataDiv = string.Format(CultureInfo.InvariantCulture,
                                                      AMPConst.LocalElementDataFormat,
                                                      GetJsonB64());
 
-            return AMPConst.RE_Element.Replace(html,
+            return MediaPlayerConst.RE_YouTubeElement.Replace(html,
                                                newElementDataDiv);
-        }
-
-        public static void GetInfos(JObject metadata,
-                                    out string title,
-                                    out string author,
-                                    out string date)
-        {
-            author = null;
-            date = null;
-
-            using (var pdfDoc = PdfDocument.Load(filePath))
-            {
-                title = pdfDoc.Title;
-                authors = pdfDoc.Author;
-                date = pdfDoc.CreationDate;
-
-                if (string.IsNullOrWhiteSpace(date) == false)
-                {
-                    var match = Regex.Match(date, "D\\:([0-9]{14})\\+[0-9]{2}'[0-9]{2}'");
-
-                    if (match.Success)
-                        if (DateTime.TryParseExact(match.Groups[1].Value, "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
-                                                   DateTimeStyles.AssumeUniversal, out var dateTime))
-                            date = dateTime.ToString(CultureInfo.InvariantCulture);
-                }
-            }
-
-            if (string.IsNullOrWhiteSpace(title))
-                title = null;
-        }
-
-        // TODO: Support playlists
-        public References ConfigureSMReferences(References r,
-                                                string subtitle = null,
-                                                string bookmarks = null)
-        {
-            string filePath = BinaryMember.GetFilePath("pdf");
-
-            GetInfos(out string pdfTitle,
-                     out string author,
-                     out string creationDate);
-
-            var title = ConfigureTitle(pdfTitle, subtitle);
-
-            return r.WithTitle(title + (bookmarks != null ? $" -- {bookmarks}" : string.Empty))
-                    .WithAuthor(author)
-                    .WithDate(creationDate)
-                    .WithSource("PDF")
-                    .WithLink("..\\" + Svc.SM.Collection.MakeRelative(filePath));
         }
     }
 }

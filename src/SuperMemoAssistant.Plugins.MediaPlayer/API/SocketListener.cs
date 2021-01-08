@@ -35,9 +35,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
 
         public static void Start()
         {
-            var server = new TcpListener(IPAddress.Parse(Config.APIHost), Config.APIPort);
+            var server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9898);
             server.Start();
-            LogTo.Info($"MediaPlayer JSON RPC API running at {Config.APIHost}:{Config.APIPort}");
+            LogTo.Info($"MediaPlayer JSON RPC API running at localhost:9898");
             while (true)
             {
                 try

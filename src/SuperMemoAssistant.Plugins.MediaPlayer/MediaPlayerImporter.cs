@@ -25,10 +25,5 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                 ? dlg.FileName
                 : null;
         }
-
-        public static void Create()
-        {
-
-        }
     }
 }

@@ -5,6 +5,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private Process MpvProcess { get; set; }
         private YouTubeMediaElement Element { get; }
+        private MpvPlayerAPI API => Svc<MediaPlayer>.Plugin.API;
+        private MediaPlayerCfg Config => Svc<MediaPlayer>.Plugin.Config;
 
         public MpvPlayerWindow(YouTubeMediaElement element)
         {
@@ -15,14 +17,32 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private void BeginMpvProcess()
         {
+            MpvProcess = new Process
+            {
+                StartInfo =
+                {
+                    FileName        = "mpv",
+                    // TODO end?
+                    // TODO geometry
+                    Arguments       = $"--start={Element.Start} {Element.Url}",
+                    UseShellExecute = false,
+                    CreateNoWindow  = false, // TODO: test
+                }
+            };
+
+            MpvProcess.Start();
+
+            /* if (workingDirectory != null) */
+            /*     p.StartInfo.WorkingDirectory = workingDirectory; */
+
         }
 
         public void Close()
         {
-            MpvProcess.CloseMainWindow();
-            OnClosing?.Invoke();
+            MpvProcess.CloseMainWindow(); // TODO: Test if this is enough
+            Closed?.Invoke();
         }
 
-        public event EventHandler OnClosing;
+        public event EventHandler Closed;
     }
 }

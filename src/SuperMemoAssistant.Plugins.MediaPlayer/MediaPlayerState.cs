@@ -67,7 +67,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             var html = ctrlHtml?.Text ?? string.Empty;
 
-            // TODO: Handle both local and yt
             var ivEl = newElem.Type == ElementType.Topic
               ? YouTubeMediaElement.TryReadElement(html, newElem.Id)
               : null;

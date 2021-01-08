@@ -204,7 +204,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                                  elementHtml)
                 .WithParent(parentElement)
                 .WithTitle(title)
-                .WithPriority(AMPState.Instance.Config.DefaultExtractPriority)
+                .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
                 .WithReference(
                   r => r.WithTitle(title)
                         .WithSource("Advanced Media Player")
@@ -219,13 +219,13 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
               : CreationResult.FailCannotCreateElement;
         }
 
-        public static AMPLocalElement TryReadElement(string elText,
+        public static LocalMediaElement TryReadElement(string elText,
                                                 int elementId)
         {
             if (string.IsNullOrWhiteSpace(elText))
                 return null;
 
-            var reRes = AMPConst.RE_Element.Match(elText);
+            var reRes = MediaPlayerConst.RE_LocalElement.Match(elText);
 
             if (reRes.Success == false)
                 return null;
@@ -234,7 +234,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             {
                 string toDeserialize = reRes.Groups[1].Value.FromBase64();
 
-                var vidEl = JsonConvert.DeserializeObject<AMPLocalElement>(toDeserialize);
+                var vidEl = JsonConvert.DeserializeObject<LocalMediaElement>(toDeserialize);
 
                 if (vidEl != null) // && elementId > 0)
                 {
@@ -276,7 +276,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                                                      AMPConst.LocalElementDataFormat,
                                                      GetJsonB64());
 
-            return AMPConst.RE_Element.Replace(html,
+            return MediaPlayerConst.RE_LocalElement.Replace(html,
                                                newElementDataDiv);
         }
 

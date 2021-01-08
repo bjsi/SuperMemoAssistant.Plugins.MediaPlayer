@@ -29,6 +29,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         public override bool HasSettings => true;
 
+        public MediaPlayerAPI API { get; } = new MediaPlayerAPI();
+
+        public SocketListener JsonRpcSocket { get; } = new SocketListener();
+
         #endregion
 
 
@@ -53,6 +57,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                     new HotKey(Key.Y, KeyModifiers.CtrlShift),
                     MediaPlayerState.Instance.ImportYouTubeVideo
                     );
+
+            _ = Task.Factory.StartNew(JsonRpcSocket.Start(), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             base.OnSMStarted(wasSMAlreadyStarted);
         }

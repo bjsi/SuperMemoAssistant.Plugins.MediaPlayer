@@ -18,8 +18,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             StartTime = -1;
             EndTime = -1;
             WatchPoint = -1;
-            MediaExtracts = new ObservableCollection<MediaExtract>();
-            MediaExtracts.CollectionChanged += OnCollectionChanged;
         }
 
         #region Properties & Fields - Public
@@ -30,9 +28,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
 
         [JsonProperty(PropertyName = "ET")]
         public double EndTime { get; set; }
-
-        [JsonProperty(PropertyName = "VE")]
-        public ObservableCollection<MediaExtract> MediaExtracts { get; }
 
         [JsonProperty(PropertyName = "WPt")]
         public double WatchPoint { get; set; }
@@ -66,16 +61,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
         [JsonIgnore]
         [DoNotNotify]
         // TODO: && EndTime < Duration
-        public bool IsFullVideo => StartTime < 0
+        public bool IsFullVideo => StartTime < 0;
 
         #endregion 
-
-        [SuppressPropertyChangedWarnings]
-        private void OnCollectionChanged(object sender,
-                                         System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            IsChanged = true;
-        }
 
         public SaveResult Save()
         {

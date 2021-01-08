@@ -1,8 +1,19 @@
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
     // Implements Basic SM Functions
-    public partial class MediaPlayerAPI : JsonRpcService
+    public class MediaPlayerAPI : JsonRpcService
     {
+
+        public event EventHandler Closed;
+
+        //
+        // Mpv
+
+        [JsonRpcMethod]
+        public void Shutdown()
+        {
+            Closed?.Invoke();
+        }
 
         //
         // Extracts
