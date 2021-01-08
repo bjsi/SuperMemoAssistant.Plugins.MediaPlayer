@@ -25,6 +25,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                   Validates = true)]
     public class MediaPlayerCfg : CfgBase<MediaPlayerCfg>, INotifyPropertyChangedEx
     {
+
+        [Field(Name = "YouTube Subtitle Languages (IETF language tags separated  by commas)")]
+        public string SubtitleLanguages { get; set; } = "en";
+
         [Field(Name = "Default Extract Priority (%)")]
         [Value(Must.BeGreaterThanOrEqualTo,
                0,

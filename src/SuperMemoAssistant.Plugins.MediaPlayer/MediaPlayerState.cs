@@ -22,10 +22,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         #region Properties & Fields - Non-Public
 
-        // TODO: Required?
-        private SynchronizationContext SyncContext { get; set; }
         private SemaphoreSlim ImportSemaphore { get; } = new SemaphoreSlim(1, 1);
-        private MPVWindow PlayerWindow { get; set; }
+        private MpvPlayerWindow PlayerWindow { get; set; }
         private MediaElement LastElement { get; set; }
 
         #endregion
@@ -71,7 +69,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             // TODO: Handle both local and yt
             var ivEl = newElem.Type == ElementType.Topic
-              ? AMPYouTubeElement.TryReadElement(html, newElem.Id)
+              ? YouTubeMediaElement.TryReadElement(html, newElem.Id)
               : null;
 
             bool noNewElem = ivEl == null;
@@ -80,68 +78,40 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             if (noNewElem && noLastElem)
                 return;
 
-            // TODO: Required?
-            SyncContext.Send(
-              delegate
-              {
-                  bool close = LastElement != null && ivEl == null;
+            bool close = LastElement != null && ivEl == null;
 
-                  CloseElement();
+            CloseElement();
 
-                  OpenElement(ivEl);
+            OpenElement(ivEl);
 
-                  if (close)
-                      PlayerWindow?.Close();
-              },
-              null);
+            if (close)
+                PlayerWindow?.Close();
         }
 
-        public void ImportYouTubeFile()
+        public void ImportYouTubeVideo()
         {
-            // TODO: Required?
-            SyncContext.Post(
-              _ =>
-              {
-                  if (ImportSemaphore.Wait(0) == false)
-                      return;
+            if (ImportSemaphore.Wait(0) == false)
+                return;
 
-                  // TODO: Doesn't need to be defined on the window
-                  if (PlayerWindow == null)
-                      CreateVideoWindow(null);
+            string idOrUrl = ClipBoard.GetText();
 
-                  string idOrUrl = PlayerWindow.YouTubeImportDialog();
+            if (!string.IsNullOrWhiteSpace(idOrUrl))
+                YouTubeMediaElement.Create(idOrUrl);
 
-                  if (!string.IsNullOrWhiteSpace(idOrUrl))
-                      PlayerWindow.Create(idOrUrl);
-
-                  ImportSemaphore.Release();
-              },
-              null
-            );
+            ImportSemaphore.Release();
         }
 
         public void OpenFile()
         {
-            // TODO: Required?
-            SyncContext.Post(
-              _ =>
-              {
-                  if (ImportSemaphore.Wait(0) == false)
-                      return;
+            if (ImportSemaphore.Wait(0) == false)
+                return;
 
-                  if (PlayerWindow == null)
-                      CreateVideoWindow(null);
+            string filePath = Importer.OpenFileDialog();
 
-                  // TODO: Doesn't need to be defined on the window
-                  string filePath = PlayerWindow.OpenFileDialog();
+            if (filePath != null)
+                Importer.Create(filePath);
 
-                  if (filePath != null)
-                      PlayerWindow.Create(filePath);
-
-                  ImportSemaphore.Release();
-              },
-              null
-            );
+            ImportSemaphore.Release();
         }
 
         private void CloseElement()
@@ -167,24 +137,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             LastElement = ivElem;
 
-            EnsureMediaPlayerWindow();
-
-            PlayerWindow.OpenVideo(ivElem);
-        }
-
-        // TODO: Might not be possible to update window position 
-        // after creation
-        public void UpdateWindowPosition(double top,
-                                         double height,
-                                         double left,
-                                         double width,
-                                         ViewMode viewMode)
-        {
-            Config.WindowTop = top;
-            Config.WindowHeight = height;
-            Config.WindowLeft = left;
-            Config.WindowWidth = width;
-            Config.DefaultViewMode = viewMode;
+            CreateVideoWindow(ivElem);
         }
 
         public Task SaveConfigAsync()
@@ -192,24 +145,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             return Svc.Configuration.SaveAsync(Config);
         }
 
-        // TODO: Required?
-        public void CaptureContext()
+        private void CreateVideoWindow(MediaElement el)
         {
-            SyncContext = new DispatcherSynchronizationContext();
-            SynchronizationContext.SetSynchronizationContext(SyncContext);
-
-            CreateVideoWindow(null);
-        }
-
-        private void EnsureMediaPlayerWindow()
-        {
-            if (PlayerWindow == null)
-                SyncContext.Send(CreateVideoWindow, null);
-        }
-
-        private void CreateVideoWindow(object _)
-        {
-            PlayerWindow = new MPVWindow();
+            PlayerWindow = new MPVWindow(el);
             PlayerWindow.Closed += VideoWindow_Closed;
         }
 

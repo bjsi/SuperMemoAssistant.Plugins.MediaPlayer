@@ -12,7 +12,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
     {
         #region Constructors
 
-        // public MediaPlayerPlugin() : base("") { }
+        public MediaPlayerPlugin() : base("") { }
 
         #endregion
 
@@ -33,14 +33,11 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
 
 
-
         #region Methods Impl
 
         /// <inheritdoc />
         protected override void OnPluginInitialized()
         {
-            // TODO: Required?
-            MediaPlayerState.Instance.CaptureContext();
             base.OnPluginInitialized();
         }
 
@@ -48,6 +45,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         protected override void OnSMStarted(bool wasSMAlreadyStarted)
         {
             Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedEventArgs>(OnElementChanged);
+
+            Svc.HotKeyManager.RegisterGlobal(
+                    "ImportYouTube",
+                    "Import a YouTube video into the Media Player",
+                    HotKeyScopes.SMBrowser,
+                    new HotKey(Key.Y, KeyModifiers.CtrlShift),
+                    MediaPlayerState.Instance.ImportYouTubeVideo
+                    );
 
             base.OnSMStarted(wasSMAlreadyStarted);
         }
