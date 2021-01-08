@@ -4,13 +4,16 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
     {
 
         private Process MpvProcess { get; set; }
+        private YouTubeMediaElement Element { get; }
 
-        public MpvPlayerWindow(MediaElement element)
+        public MpvPlayerWindow(YouTubeMediaElement element)
         {
             element.ThrowIfArgumentNull("Failed to open Mpv Player Window because media element is null");
+            Element = element;
+            BeginMpvProcess();
         }
 
-        private void BeginMpvProcess(double start, double end)
+        private void BeginMpvProcess()
         {
         }
 

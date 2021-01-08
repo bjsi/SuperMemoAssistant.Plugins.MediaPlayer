@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="SuperMemoAssistant.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+      <OutputType>Library</OutputType>
+      <TargetFramework>net472</TargetFramework>
     <RootNamespace>SuperMemoAssistant.Plugins.MediaPlayer</RootNamespace>
     <Deterministic>true</Deterministic>
     <AssemblyVersion>2.0.4.1</AssemblyVersion>
