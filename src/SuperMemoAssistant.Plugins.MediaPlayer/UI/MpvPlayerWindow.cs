@@ -19,12 +19,15 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
         {
             MpvProcess = new Process
             {
+                var args = new string[] 
+                { 
+                    "--start={Element.Start} {Element.Url}",
+                    ""
+                }
                 StartInfo =
                 {
                     FileName        = "mpv",
-                    // TODO end?
-                    // TODO geometry
-                    Arguments       = $"--start={Element.Start} {Element.Url}",
+                    Arguments       = string.Join
                     UseShellExecute = false,
                     CreateNoWindow  = false, // TODO: test
                 }

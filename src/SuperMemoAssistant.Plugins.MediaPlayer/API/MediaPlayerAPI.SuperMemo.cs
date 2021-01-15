@@ -1,7 +1,12 @@
+using System.IO;
+using AustinHarris.JsonRpc;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
     // Implements Basic SM Functions
-    public class MediaPlayerAPI : JsonRpcService
+    // TODO: Lock UI, check elementId is expectedId, then execute
+    // use MethodDecorator.Fody for ui locking and unlocking
+    public partial class MediaPlayerAPI : JsonRpcService
     {
 
         public event EventHandler Closed;
@@ -12,56 +17,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         [JsonRpcMethod]
         public void Shutdown()
         {
-            Closed?.Invoke();
-        }
-
-        //
-        // Extracts
-
-        [JsonRpcMethod]
-        public string AudioImageExtract(string audiobase64, string image)
-        {
-
-            if (string.IsNullOrWhiteSpace(base64))
-                return "Image extract failed - the base64 encoded image was null or whitespace";
-            byte[] bytes = Convert.FromBase64String(base64);
-
-            // TODO: Create element
-        }
-
-        [JsonRpcMethod]
-        public string GifExtractRemote(string idOrUrl, double start, double end, string subs)
-        {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
-            var filepath = Ffmpeg.GifExtract(streams.Video);
-
-            // TODO: Create element
-        }
-
-        [JsonRpcMethod]
-        public string AudioExtractRemote(double start, double end, string subs)
-        {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
-            var filepath = Ffmpeg.AudioExtract(streams.Audio);
-
-            // TODO: Create element
-        }
-
-        [JsonRpcMethod]
-        public string VideoExtractRemote(string idOrUrl, double start, double end, string subs)
-        {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
-            var filepath = Ffmpeg.VideoExtract(streams, start, end);
-            // TODO: Create element
-        }
-
-        [JsonRpcMethod]
-        public string MediaPlayerExtract(double start, double end, string subs)
-        {
-            if (start > end)
-                return null;
-
-            return $"Extract: start: {start} end: {end} subs: {subs}";
+            Closed?.Invoke(null, null);
         }
 
         //

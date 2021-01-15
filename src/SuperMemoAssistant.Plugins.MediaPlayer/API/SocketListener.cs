@@ -12,53 +12,34 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
     {
 
         private static MediaPlayerCfg Config => Svc<MediaPlayer>.Plugin.Config;
-        public static bool Running { get; set; } = true;
+        public bool HasExited { get; set; } = false;
 
-        private static RpcResultHandler ResultHandler { get; } = new AsyncCallback(state =>
-                    {
-                        var async = ((JsonRpcStateAsync)state);
-                        var result = async.Result;
-                        var writer = ((StreamWriter)async.AsyncState);
-
-                        Console.WriteLine(result);
-                        writer.WriteLine(result);
-                        writer.FlushAsync();
-                        writer.Close(); // Handle a single call, then disconnect the client
-                    }
-                );
-
-        private static void ProcessJson(StreamWriter writer, string line)
+        public static async Task Start()
         {
-            var async = new JsonRpcStateAsync(rpcResultHandler, writer) { JsonRpc = line };
-            JsonRpcProcessor.Process(async, writer);
-        }
-
-        public static void Start()
-        {
-            var server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9898);
-            server.Start();
-            LogTo.Info($"MediaPlayer JSON RPC API running at localhost:9898");
-            while (true)
+            var server = new TcpListener(IPAddress.Parse(Config.Host), Config.Port);
+            await server.StartAsync();
+            LogTo.Info($"MediaPlayer API running");
+            while (!HasExited)
             {
                 try
                 {
-                    using (var client = server.AcceptTcpClient())
+                    using (var client = await server.AcceptTcpClientAsync())
                     using (var stream = client.GetStream())
                     {
-                        LogTo.Debug("Client connected to MediaPlayer JSON RPC API");
+                        LogTo.Debug("Client connected to MediaPlayer socket");
                         var reader = new StreamReader(stream, Encoding.UTF8);
                         var writer = new StreamWriter(stream, new UTF8Encoding(false));
-
-                        while (!reader.EndOfStream)
-                        {
-                            var line = reader.ReadLine();
-                            ProcessJson(writer, line);
-                        }
+                        var line = await client.ReadLineAsync();
+                        LogTo.Debug("MediaPlayer API received data from client: " + line);
+                        var response = await JsonProcessor.ProcessAsync(line);
+                        await writer.WriteLineAsync(response);
+                        await writer.FlushAsync();
+                        client.Close();
                     }
                 }
                 catch (Exception e)
                 {
-                    LogTo.Info($"MediaPlayer JSON RPC API caught exception {e}");
+                    LogTo.Info($"MediaPlayer API caught exception {e}");
                 }
             }
         }
