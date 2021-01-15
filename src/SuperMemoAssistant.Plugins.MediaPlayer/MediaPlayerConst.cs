@@ -1,5 +1,5 @@
+using SuperMemoAssistant.Plugins.MediaPlayer.Models;
 using System.Text.RegularExpressions;
-using AdvancedMediaPlayer.Models;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {

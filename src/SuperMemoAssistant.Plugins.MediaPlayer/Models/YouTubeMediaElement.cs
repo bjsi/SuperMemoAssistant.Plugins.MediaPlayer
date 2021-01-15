@@ -1,13 +1,15 @@
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using AdvancedMediaPlayer.Models;
+using Anotar.Serilog;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
+using SuperMemoAssistant.Plugins.MediaPlayer.Helpers;
+using SuperMemoAssistant.Plugins.MediaPlayer.YouTube;
 using SuperMemoAssistant.Services;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
@@ -30,7 +32,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
         [JsonProperty(PropertyName = "ID")]
         public string Id { get; set; }
 
-        public string Url => YTConst.VidUrlPrefix + Id;
+        public string Url => YTConst.VidURLPrefix + Id;
 
         #endregion
 
@@ -76,7 +78,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             }
 
             string elementHtml = string.Format(CultureInfo.InvariantCulture,
-                                               AMPConst.YouTubeElementFormat,
+                                               MediaPlayerConst.YouTubeElementFormat,
                                                title,
                                                ytEl.GetJsonB64());
 
@@ -109,25 +111,26 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
 
         public static CreationResult Create(
                 int parentElementId,
+                string videoId,
                 double startTime,
                 double endTime,
                 double watchPoint,
-                ViewMode viewMode)
+                ViewMode viewMode,
+                bool shouldDisplay)
         {
 
-            var html = ContextEx.GetCurrentElementContent();
+            var html = ContentEx.GetCurrentElementContent();
             var refs = ReferenceParser.GetReferences(html);
             if (refs == null)
-                return;
+                return CreationResult.FailUnknown;
 
-            string youtubeId = this.Id;
             string title = refs.Title;
             string uploader = refs.Author;
             string creationDate = refs.Date;
 
-            ytEl = new YouTubeMediaElement
+            var ytEl = new YouTubeMediaElement
             {
-                Id = youtubeId,
+                Id = videoId,
                 StartTime = startTime,
                 EndTime = endTime,
                 WatchPoint = watchPoint,
@@ -135,7 +138,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             };
 
             string elementHtml = string.Format(CultureInfo.InvariantCulture,
-                                               AMPConst.YouTubeElementFormat,
+                                               MediaPlayerConst.YouTubeElementFormat,
                                                title,
                                                ytEl.GetJsonB64());
 
@@ -155,7 +158,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                         .WithAuthor(uploader)
                         .WithDate(creationDate)
                         .WithSource("YouTube")
-                        .WithLink($"https://www.youtube.com/watch?v=" + youtubeId)
+                        .WithLink($"https://www.youtube.com/watch?v=" + videoId)
                 );
 
             if (shouldDisplay == false)
@@ -201,10 +204,12 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             }
         }
 
+        // TODO: Save, Update Html
+
         private string UpdateHtml(string html)
         {
             string newElementDataDiv = string.Format(CultureInfo.InvariantCulture,
-                                                     AMPConst.LocalElementDataFormat,
+                                                     MediaPlayerConst.LocalElementDataFormat,
                                                      GetJsonB64());
 
             return MediaPlayerConst.RE_YouTubeElement.Replace(html,

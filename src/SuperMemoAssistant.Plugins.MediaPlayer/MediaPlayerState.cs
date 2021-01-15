@@ -1,10 +1,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AdvancedMediaPlayer.Models;
+using System.Windows;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
+using SuperMemoAssistant.Plugins.MediaPlayer.Models;
+using SuperMemoAssistant.Plugins.MediaPlayer.UI;
 using SuperMemoAssistant.Services;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer
@@ -57,7 +59,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         public void OnElementChanged(IElement newElem,
                                      IControlHtml ctrlHtml)
         {
-            PlayerWindow?.CancelSave();
+            // PlayerWindow?.CancelSave();
 
             if (newElem == null)
                 return;
@@ -87,15 +89,15 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                 PlayerWindow?.Close();
         }
 
-        public void ImportYouTubeVideo()
+        public async void ImportYouTubeVideo()
         {
-            if (ImportSemaphore.Wait(0) == false)
+            if (await ImportSemaphore.WaitAsync(0) == false)
                 return;
 
-            string idOrUrl = ClipBoard.GetText();
+            string idOrUrl = Clipboard.GetText();
 
             if (!string.IsNullOrWhiteSpace(idOrUrl))
-                YouTubeMediaElement.Create(idOrUrl);
+                await YouTubeMediaElement.Create(idOrUrl);
 
             ImportSemaphore.Release();
         }
@@ -108,7 +110,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             string filePath = Importer.OpenFileDialog();
 
             if (filePath != null)
-                Importer.Create(filePath);
+            {
+                // TODO:
+                // Importer.Create(filePath);
+            }
 
             ImportSemaphore.Release();
         }
@@ -129,7 +134,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             }
         }
 
-        private void OpenElement(MediaElement ivElem)
+        private void OpenElement(YouTubeMediaElement ivElem)
         {
             if (ivElem == null)
                 return;
@@ -144,16 +149,16 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             return Svc.Configuration.SaveAsync(Config);
         }
 
-        private void CreateVideoWindow(MediaElement el)
+        private void CreateVideoWindow(YouTubeMediaElement el)
         {
-            PlayerWindow = new MPVWindow(el);
-            PlayerWindow.Closed += VideoWindow_Closed;
+            PlayerWindow = new MpvPlayerWindow(el);
+            PlayerWindow.API.Closed += VideoWindow_Closed;
         }
 
         private void VideoWindow_Closed(object sender,
                                       EventArgs e)
         {
-            PlayerWindow.Closed -= VideoWindow_Closed;
+            PlayerWindow.API.Closed -= VideoWindow_Closed;
             PlayerWindow = null;
         }
 

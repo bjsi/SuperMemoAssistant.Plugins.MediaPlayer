@@ -1,11 +1,13 @@
-using System.IO;
+using System;
+using System.Windows.Input;
 using AustinHarris.JsonRpc;
+using SuperMemoAssistant.Services;
+using SuperMemoAssistant.Sys.IO.Devices;
 
-namespace SuperMemoAssistant.Plugins.MediaPlayer
+namespace SuperMemoAssistant.Plugins.MediaPlayer.API
 {
     // Implements Basic SM Functions
-    // TODO: Lock UI, check elementId is expectedId, then execute
-    // use MethodDecorator.Fody for ui locking and unlocking
+    // TODO: When new Interop available: Lock UI, check elementId is expectedId, then execute
     public partial class MediaPlayerAPI : JsonRpcService
     {
 
@@ -113,6 +115,26 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             if (nextSibling != null)
                 Svc.SM.UI.ElementWdw.GoToElement(nextSibling.Id);
+        }
+
+        protected bool ForwardKeysToSM(HotKey hotKey,
+                               int timeout = 100)
+        {
+            var handle = Svc.SM.UI.ElementWdw.Handle;
+
+            if (handle.ToInt32() == 0)
+                return false;
+
+            if (hotKey.Alt && hotKey.Ctrl == false && hotKey.Win == false)
+                return Sys.IO.Devices.Keyboard.PostSysKeysAsync(
+                  handle,
+                  hotKey
+                ).Wait(timeout);
+
+            return Sys.IO.Devices.Keyboard.PostKeysAsync(
+              handle,
+              hotKey
+            ).Wait(timeout);
         }
     }
 }

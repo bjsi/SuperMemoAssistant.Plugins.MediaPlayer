@@ -1,9 +1,19 @@
+using Anotar.Serilog;
+using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
 using SuperMemoAssistant.Interop.SuperMemo.Core;
+using SuperMemoAssistant.Plugins.MediaPlayer.API;
 using SuperMemoAssistant.Services;
 using SuperMemoAssistant.Services.IO.HotKeys;
+using SuperMemoAssistant.Services.IO.Keyboard;
+using SuperMemoAssistant.Services.Sentry;
 using SuperMemoAssistant.Services.UI.Configuration;
+using SuperMemoAssistant.Sys.IO.Devices;
 using SuperMemoAssistant.Sys.Remoting;
+using System.Runtime.Remoting;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
@@ -26,27 +36,18 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         /// <inheritdoc />
         public override string Name => "MediaPlayerPlugin";
-
         public override bool HasSettings => true;
 
         public MediaPlayerAPI API { get; } = new MediaPlayerAPI();
-
-        public SocketListener JsonRpcSocket { get; } = new SocketListener();
+        public MediaPlayerCfg Config { get; }
 
         #endregion
-
 
 
         #region Methods Impl
 
         /// <inheritdoc />
         protected override void OnPluginInitialized()
-        {
-            base.OnPluginInitialized();
-        }
-
-        /// <inheritdoc />
-        protected override void OnSMStarted(bool wasSMAlreadyStarted)
         {
             Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedEventArgs>(OnElementChanged);
 
@@ -58,15 +59,13 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                     MediaPlayerState.Instance.ImportYouTubeVideo
                     );
 
-            _ = Task.Factory.StartNew(JsonRpcSocket.Start(), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
-            base.OnSMStarted(wasSMAlreadyStarted);
+            _ = Task.Factory.StartNew(SocketListener.Start, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         /// <inheritdoc />
         public override void ShowSettings()
         {
-            ConfigurationWindow.ShowAndActivate(null, HotKeyManager.Instance, MediaPlayerState.Instance.Config);
+            // ConfigurationWindow.ShowAndActivate(null, HotKeyManager.Instance, MediaPlayerState.Instance.Config);
         }
 
         #endregion

@@ -1,3 +1,9 @@
+using CliWrap;
+using CliWrap.Buffered;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
     public static class YdlUtils

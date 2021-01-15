@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text.Json.Serialization;
+using Forge.Forms.Annotations;
+using Newtonsoft.Json;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Models;
-using SuperMemoAssistant.Services;
+using SuperMemoAssistant.Plugins.MediaPlayer.Models;
 using SuperMemoAssistant.Services.UI.Configuration;
 using SuperMemoAssistant.Sys.ComponentModel;
 
@@ -28,6 +28,12 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         [Field(Name = "YouTube Subtitle Languages (IETF language tags separated  by commas)")]
         public string SubtitleLanguages { get; set; } = "en";
+
+        [Field(Name = "Media Player Host")]
+        public string Host { get; set; } = "0.0.0.0";
+
+        [Field(Name = "Media Player Port")]
+        public int Port { get; set; } = 9898;
 
         [Field(Name = "Default Extract Priority (%)")]
         [Value(Must.BeGreaterThanOrEqualTo,
@@ -69,6 +75,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         {
             return "Media Player";
         }
+
+        [JsonIgnore]
+        public bool IsChanged { get; set; }
 
         #endregion
 

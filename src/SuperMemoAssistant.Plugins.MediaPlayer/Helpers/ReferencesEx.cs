@@ -1,3 +1,6 @@
+using HtmlAgilityPack;
+using System.Text.RegularExpressions;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer.Helpers
 {
     public class References
@@ -98,7 +101,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Helpers
             if (string.IsNullOrEmpty(referenceHtml))
                 return string.Empty;
 
-            string pattern = String.Format(@"#{0}: (.*?)<br>", refName);
+            string pattern = string.Format(@"#{0}: (.*?)<br>", refName);
             Regex regex = new Regex(pattern);
             Match match = regex.Match(referenceHtml);
 

@@ -38,6 +38,8 @@
       <Version>5.1.3</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="AustinHarris.JsonRpc" Version="1.2.2" />
+    <PackageReference Include="CliWrap" Version="3.3.0" />
     <PackageReference Include="Extensions.System.IO">
       <Version>0.1.0.3</Version>
     </PackageReference>
@@ -46,6 +48,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.29" />
+    <PackageReference Include="MethodDecorator.Fody" Version="1.1.1" />
     <PackageReference Include="MSBuild.Tools">
       <Version>0.2.61</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -61,12 +65,9 @@
     <PackageReference Include="Sentry.Serilog">
       <Version>2.1.6</Version>
     </PackageReference>
-    <PackageReference Include="SuperMemoAssistant.Interop">
-      <Version>2.1.0-beta.7</Version>
-    </PackageReference>
-    <PackageReference Include="SuperMemoAssistant.Services.Sentry">
-      <Version>2.1.0-beta.2</Version>
-    </PackageReference>
+    <PackageReference Include="SuperMemoAssistant.Interop" Version="2.0.5-alpha.6" />
+    <PackageReference Include="SuperMemoAssistant.Services.Sentry" Version="2.0.5-alpha.3" />
+    <PackageReference Include="SuperMemoAssistant.Services.UI" Version="2.0.5-alpha.3" />
   </ItemGroup>
   <Target Name="CopyOutput" AfterTargets="Build">
     <Exec Command="xcopy /h /i /c /k /e /r /y &quot;$(TargetDir)*&quot; &quot;%25UserProfile%25\SuperMemoAssistant\Plugins\Development\$(ProjectName)&quot;" />

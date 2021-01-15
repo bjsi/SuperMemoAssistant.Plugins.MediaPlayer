@@ -1,4 +1,20 @@
-namespace SuperMemoAssistant.Plugins.MediaPlayer
+using AustinHarris.JsonRpc;
+using SuperMemoAssistant.Interop.SuperMemo.Content.Contents;
+using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
+using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
+using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
+using SuperMemoAssistant.Plugins.MediaPlayer.Models;
+using SuperMemoAssistant.Plugins.MediaPlayer.YouTube;
+using SuperMemoAssistant.Services;
+using SuperMemoAssistant.Sys.Drawing;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Threading.Tasks;
+using References = SuperMemoAssistant.Plugins.MediaPlayer.Helpers.References;
+
+namespace SuperMemoAssistant.Plugins.MediaPlayer.API
 {
     //
     // Implements extraction
@@ -9,7 +25,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             if (priority < 0 || priority > 100)
                 priority = MediaPlayerConst.DefaultExtractPriority;
 
-            var parentElementId = element.parentElementId;
+            var parentElementId = element.ElementId;
             IElement parentElement =
               parentElementId > 0
                 ? Svc.SM.Registry.Element[parentElementId]
@@ -22,14 +38,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
               new ElementBuilder(ElementType.Topic,
                                  contents.ToArray())
                 .WithParent(parentElement)
-                .WithTitle(res.Title + ": {element.StartTime} -> {element.EndTime}")
+                .WithTitle(refs.Title + ": {element.StartTime} -> {element.EndTime}")
                 .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
                 .WithReference(
                   r => r.WithTitle(refs.Title)
                         .WithAuthor(refs.Author)
                         .WithDate(refs.Date)
                         .WithSource("YouTube")
-                        .WithLink(YTConst.CreateVideoUrl(element.Id, element.StartTime))
+                        .WithLink(element.Url)
                 );
 
             elemBuilder.DoNotDisplay();
@@ -60,8 +76,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             if (imgRegistryId <= 0)
                 return null;
 
-            return new ImageContent(imgRegistryId,
-                    Config.ImageStretchType);
+            return new ImageContent(imgRegistryId, Config.ImageStretchType);
         }
 
         private static ContentBase CreateAudioContent(string base64, string title)
@@ -71,58 +86,63 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         [JsonRpcMethod]
         [LockValidateExecute]
-        public string AudioImageExtract(int expectedId, string audiobase64, string image)
+        public static string AudioImageExtract(int expectedId, string audiobase64, string image)
         {
 
-            if (string.IsNullOrWhiteSpace(base64))
+            if (string.IsNullOrWhiteSpace(audiobase64))
                 return "Image extract failed - the base64 encoded image was null or whitespace";
 
+            throw new NotImplementedException();
 
             // TODO: Create element
         }
 
         [JsonRpcMethod]
         [LockValidateExecute]
-        public string GifExtractRemote(int expectedId, string idOrUrl, double start, double end, string subs)
+        public static async Task<string> GifExtractRemote(int expectedId, string idOrUrl, double start, double end, string subs)
         {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
+            var streams = await Ydl.GetAVStreamUrlsAsync(idOrUrl);
             if (streams == null)
                 return "Failed to get AV streams for the video";
 
-            var filepath = Ffmpeg.GifExtract(streams.Video);
+            var filepath = await Ffmpeg.GifExtract(streams.Video, start, end, "outputfile.gif");
             if (!File.Exists(filepath))
                 return "Ffmpeg failed to create gif extract";
 
+            throw new NotImplementedException();
             // TODO: Create element
         }
 
         [JsonRpcMethod]
         [LockValidateExecute]
-        public string AudioExtractRemote(expecdouble start, double end, string subs)
+        public static async Task<string> AudioExtractRemote(int expectedElementId, string idOrUrl, double start, double end, string subs)
         {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
-            var filepath = Ffmpeg.AudioExtract(streams.Audio);
+            var streams = await Ydl.GetAVStreamUrlsAsync(idOrUrl);
+            var filepath = await Ffmpeg.AudioExtractAsync(streams.Audio, start, end, "outputfile.?");
 
             // TODO: Create element
+            throw new NotImplementedException();
         }
 
         [JsonRpcMethod]
         [LockValidateExecute]
-        public string VideoExtractRemote(int expectedId, string idOrUrl, double start, double end, string subs)
+        public static async Task<string> VideoExtractRemote(int expectedId, string idOrUrl, double start, double end, string subs)
         {
-            var streams = Ydl.GetAVStreamUrls(idOrUrl);
-            var filepath = Ffmpeg.VideoExtract(streams, start, end);
+            var streams = await Ydl.GetAVStreamUrlsAsync(idOrUrl);
+            var filepath = await Ffmpeg.VideoExtractAsync(streams.Video, idOrUrl, start, end, "outputfile.?");
             // TODO: Create element
+            throw new NotImplementedException();
         }
 
         [JsonRpcMethod]
         [LockValidateExecute]
-        public string MediaPlayerExtract(int expectedId, double start, double end, string subs)
+        public static string MediaPlayerExtract(int expectedId, double start, double end, string subs)
         {
             if (start > end)
                 return null;
 
             return $"Extract: start: {start} end: {end} subs: {subs}";
+            throw new NotImplementedException();
         }
     }
 }

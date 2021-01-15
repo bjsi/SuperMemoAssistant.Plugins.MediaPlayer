@@ -1,4 +1,7 @@
 using Forge.Forms;
+using SuperMemoAssistant.Services;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {

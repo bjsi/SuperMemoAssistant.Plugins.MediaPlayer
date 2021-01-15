@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using AdvancedMediaPlayer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SuperMemoAssistant.Extensions;

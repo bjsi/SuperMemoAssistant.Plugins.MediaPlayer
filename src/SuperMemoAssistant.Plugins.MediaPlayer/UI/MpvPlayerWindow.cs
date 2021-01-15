@@ -1,3 +1,10 @@
+using SuperMemoAssistant.Extensions;
+using SuperMemoAssistant.Plugins.MediaPlayer.API;
+using SuperMemoAssistant.Plugins.MediaPlayer.Models;
+using SuperMemoAssistant.Services;
+using System;
+using System.Diagnostics;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 {
     public class MpvPlayerWindow
@@ -5,8 +12,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private Process MpvProcess { get; set; }
         private YouTubeMediaElement Element { get; }
-        private MpvPlayerAPI API => Svc<MediaPlayer>.Plugin.API;
-        private MediaPlayerCfg Config => Svc<MediaPlayer>.Plugin.Config;
+        public MediaPlayerAPI API => Svc<MediaPlayerPlugin>.Plugin.API;
+        private MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
 
         public MpvPlayerWindow(YouTubeMediaElement element)
         {
@@ -17,17 +24,20 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private void BeginMpvProcess()
         {
+            var args = new string[]
+            {
+                $"--start={Element.StartTime}",
+                $"--geometry={Config.WindowWidth}x{Config.WindowHeight}+{Config.WindowLeft}+{Config.WindowTop}",
+                $"--script-opts=elementid={Element.ElementId}",
+                $"{Element.Url}"
+            };
+
             MpvProcess = new Process
             {
-                var args = new string[] 
-                { 
-                    "--start={Element.Start} {Element.Url}",
-                    ""
-                }
                 StartInfo =
                 {
                     FileName        = "mpv",
-                    Arguments       = string.Join
+                    Arguments       = string.Join(" ", args),
                     UseShellExecute = false,
                     CreateNoWindow  = false, // TODO: test
                 }
@@ -43,9 +53,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
         public void Close()
         {
             MpvProcess.CloseMainWindow(); // TODO: Test if this is enough
-            Closed?.Invoke();
         }
-
-        public event EventHandler Closed;
     }
 }

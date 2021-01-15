@@ -1,12 +1,8 @@
-using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using AdvancedMediaPlayer.Models;
 using Forge.Forms.Annotations;
 using Newtonsoft.Json;
+using PropertyChanged;
 using SuperMemoAssistant.Extensions;
-using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
-using SuperMemoAssistant.Services;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
 {
@@ -64,74 +60,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
         public bool IsFullVideo => StartTime < 0;
 
         #endregion 
-
-        public SaveResult Save()
-        {
-            if (IsChanged == false)
-                return SaveResult.Ok;
-
-            if (ElementId <= 0)
-                return SaveToBackup();
-
-            try
-            {
-                bool saveToControl = Svc.SM.UI.ElementWdw.CurrentElementId == ElementId;
-
-                if (saveToControl)
-                {
-                    IControlHtml ctrlHtml = Svc.SM.UI.ElementWdw.ControlGroup.GetFirstHtmlControl();
-
-                    ctrlHtml.Text = UpdateHtml(ctrlHtml.Text);
-
-                    IsChanged = false;
-                }
-
-                else
-                {
-                    return SaveResult.Fail;
-
-                    /*
-                      var elem = Svc.SM.Registry.Element[ElementId];
-
-                      if (elem == null || elem.Deleted)
-                        return SaveResult.FailDeleted;
-
-                      var compGroup = elem.ComponentGroup;
-
-                      if (compGroup == null || compGroup.Count == 0)
-                        return SaveResult.FailDeleted;
-
-                      var htmlComp = compGroup.GetFirstHtmlComponent();
-
-                      if (htmlComp == null)
-                        return SaveResult.FailInvalidComponent;
-
-                      var textMember = htmlComp.Text;
-
-                      if (textMember == null || textMember.Empty)
-                        return SaveResult.FailInvalidTextMember;
-
-                      textMember.Value = UpdateHtml(textMember.Value);
-
-                      IsChanged = false;
-                    */
-                }
-
-
-                return SaveResult.Ok;
-            }
-            catch (Exception)
-            {
-                return SaveToBackup();
-            }
-        }
-
-        public SaveResult SaveToBackup()
-        {
-            // TODO: Save to temp file
-            // TODO: Set Dirty = false
-            return SaveResult.Fail;
-        }
 
         protected string GetJsonB64()
         {

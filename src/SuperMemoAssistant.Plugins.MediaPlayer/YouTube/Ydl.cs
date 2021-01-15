@@ -1,3 +1,9 @@
+using Anotar.Serilog;
+using CliWrap;
+using CliWrap.Buffered;
+using System;
+using System.Threading.Tasks;
+
 namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
 {
     public class AVStreams
@@ -13,14 +19,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
 
     public static class Ydl
     {
-        public static async Task<AVStreams> GetAVStreamUrls(string idOrUrl)
+        public static async Task<AVStreams> GetAVStreamUrlsAsync(string idOrUrl)
         {
             try
             {
                 var res = await Cli.Wrap("youtube-dl")
                     .WithArguments($"--youtube-skip-dash-manifest -g {idOrUrl}")
                     .ExecuteBufferedAsync();
-                var stdout = res.StandardOutput.Split(Environment.NewLine);
+                var stdout = res.StandardOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
                 return new AVStreams(stdout[0], stdout[1]);
             }
             catch (Exception e)
@@ -31,22 +37,22 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
             return null;
         }
 
-        public static async Task<string> GetVideoStreamUrl(string idOrUrl)
+        public static async Task<string> GetVideoStreamUrlAsync(string idOrUrl)
         {
-            var streams = await GetAVStreamUrls(idOrUrl);
+            var streams = await GetAVStreamUrlsAsync(idOrUrl);
             return streams?.Video;
         }
 
-        public static async Task<string> GetAudioStreamUrl(string idOrUrl)
+        public static async Task<string> GetAudioStreamUrlAsync(string idOrUrl)
         {
-            var streams = await GetAVStreamUrls(idOrUrl);
+            var streams = await GetAVStreamUrlsAsync(idOrUrl);
             return streams?.Audio;
         }
     }
 
     public static class Ffmpeg
     {
-        public static async Task<string> VideoExtract(string videoStream, double start, double end, string outputFile)
+        public static async Task<string> VideoExtractAsync(string videoStream, string idOrUrl, double start, double end, string outputFile)
         {
             try
             {
@@ -54,7 +60,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
                     .WithArguments($"-ss {start} -i \"{videoStream}\" -map 0:v -t {end - start} -c:v libx264 {outputFile}")
                     .ExecuteAsync();
             }
-            catch
+            catch (Exception e)
             {
                 LogTo.Error($"Ffmpeg video extract failed with exception {e}");
                 return null;
@@ -62,7 +68,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
             return outputFile;
         }
 
-        public static async Task<string> AudioVideoExtract(AVStreams streams, double start, double end, string outputFile)
+        public static async Task<string> AudioVideoExtractAsync(AVStreams streams, double start, double end, string outputFile)
         {
             try
             {
@@ -79,7 +85,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
             return outputFile;
         }
 
-        public static async Task<string> AudioExtract(string audioStream, double start, double end, string outputFile)
+        public static async Task<string> AudioExtractAsync(string audioStream, double start, double end, string outputFile)
         {
             try
             {
