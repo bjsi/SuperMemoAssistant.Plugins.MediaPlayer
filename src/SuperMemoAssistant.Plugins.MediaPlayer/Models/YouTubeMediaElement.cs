@@ -1,10 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Anotar.Serilog;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SuperMemoAssistant.Extensions;
+using SuperMemoAssistant.Interop.SuperMemo.Content.Contents;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
@@ -36,16 +42,18 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
 
         #endregion
 
+        private static MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
 
         public static async Task<CreationResult> Create(
           string urlOrId,
-          double startTime = -1,
+          double startTime = 0,
           double endTime = -1,
           int parentElementId = -1,
-          double watchPoint = -1,
+          double watchPoint = 0,
           ViewMode viewMode = MediaPlayerConst.DefaultViewMode,
           bool shouldDisplay = true)
         {
+            // TODO: Time the verification check
             JObject metadata = await YdlUtils.GetYouTubeVideoMetadata(urlOrId);
             if (metadata == null || string.IsNullOrWhiteSpace((string)metadata["id"]))
             {
@@ -59,6 +67,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             string uploader = (string)metadata["uploader"];
             string uploaderId = (string)metadata["uploader_id"];
             string creationDate = (string)metadata["upload_date"];
+            string thumbnailUrl = (string)metadata["thumbnail"];
 
             ytEl = new YouTubeMediaElement
             {
@@ -69,36 +78,40 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                 ViewMode = viewMode,
             };
 
+            List<ContentBase> contents = new List<ContentBase>();
+
             string elementHtml = string.Format(CultureInfo.InvariantCulture,
                                                MediaPlayerConst.YouTubeElementFormat,
                                                title,
                                                ytEl.GetJsonB64());
+            contents.Add(new TextContent(true, elementHtml));
+            if (Config.IncludeYouTubeThumbnail)
+            {
+                Image img = DownloadThumbnail(thumbnailUrl);
+                if (img != null)
+                {
+                    var imgContent = ContentEx.CreateImageContent(img, string.Format(YTConst.VideoThumbImgRegPath, ytEl.Id));
+                    if (imgContent != null)
+                        contents.Add(imgContent);
+                }
+            }
 
-            IElement parentElement =
-              parentElementId > 0
-                ? Svc.SM.Registry.Element[parentElementId]
-                : null;
+            return CreateSMElement(parentElementId, contents, title, uploader, creationDate, ytEl.Url, shouldDisplay);
+        }
 
-            var elemBuilder =
-              new ElementBuilder(ElementType.Topic,
-                                 elementHtml)
-                .WithParent(parentElement)
-                .WithTitle(title)
-                .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
-                .WithReference(
-                  r => r.WithTitle(title)
-                        .WithAuthor($"{uploader} (id={uploaderId})")
-                        .WithDate(creationDate)
-                        .WithSource("YouTube")
-                        .WithLink(ytEl.Url)
-                );
+        private static string HumanReadableDate(string date) 
+        {
+            if (string.IsNullOrEmpty(date) || date.Length != 8)
+                return null;
 
-            if (shouldDisplay == false)
-                elemBuilder = elemBuilder.DoNotDisplay();
+            var y = int.TryParse(date.Substring(0, 4), out var year);
+            var m = int.TryParse(date.Substring(4, 2), out var month);
+            var d = int.TryParse(date.Substring(6, 2), out var day);
+            if (new[] { y, m, d }.Any(x => !x))
+                return null;
 
-            return Svc.SM.Registry.Element.Add(out _, ElemCreationFlags.CreateSubfolders, elemBuilder)
-              ? CreationResult.Ok
-              : CreationResult.FailCannotCreateElement;
+            var dt = new DateTime(year, month, day);
+            return dt.ToString(CultureInfo.InvariantCulture);
         }
 
         public static CreationResult Create(
@@ -134,23 +147,33 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                                                title,
                                                ytEl.GetJsonB64());
 
+            var contents = new List<ContentBase> { new TextContent(true, elementHtml) };
+
+            return CreateSMElement(parentElementId, contents, title, uploader, creationDate, ytEl.Url, shouldDisplay);
+
+        }
+
+        private static CreationResult CreateSMElement(int parentElId, List<ContentBase> contents, string title,
+                                                      string uploader, string creationDate, string url,
+                                                      bool shouldDisplay)
+        {
             IElement parentElement =
-              parentElementId > 0
-                ? Svc.SM.Registry.Element[parentElementId]
+              parentElId > 0
+                ? Svc.SM.Registry.Element[parentElId]
                 : null;
 
             var elemBuilder =
               new ElementBuilder(ElementType.Topic,
-                                 elementHtml)
+                                 contents.ToArray())
                 .WithParent(parentElement)
                 .WithTitle(title)
                 .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
                 .WithReference(
                   r => r.WithTitle(title)
                         .WithAuthor(uploader)
-                        .WithDate(creationDate)
+                        .WithDate(HumanReadableDate(creationDate))
                         .WithSource("YouTube")
-                        .WithLink(ytEl.Url)
+                        .WithLink(url)
                 );
 
             if (shouldDisplay == false)
@@ -159,6 +182,31 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             return Svc.SM.Registry.Element.Add(out _, ElemCreationFlags.CreateSubfolders, elemBuilder)
               ? CreationResult.Ok
               : CreationResult.FailCannotCreateElement;
+        }
+
+        private static Image DownloadThumbnail(string url)
+        {
+            try
+            {
+                using(var wc = new WebClient())
+                {
+                    byte[] bytes = wc.DownloadData(url);
+                    if (bytes != null)
+                    {
+                        MemoryStream ms = new MemoryStream(bytes);
+                        if (ms != null)
+                        {
+                            return Image.FromStream(ms);
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                LogTo.Debug("Failed to download thumbnail for MediaPlayer element");
+            }
+
+            return null;
         }
 
         public static YouTubeMediaElement TryReadElement(string elText,

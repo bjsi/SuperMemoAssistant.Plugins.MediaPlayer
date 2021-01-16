@@ -1,6 +1,5 @@
 using Anotar.Serilog;
 using CliWrap;
-using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Interop.Plugins;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
 using SuperMemoAssistant.Interop.SuperMemo.Core;
@@ -13,8 +12,8 @@ using SuperMemoAssistant.Sys.IO.Devices;
 using SuperMemoAssistant.Sys.Remoting;
 using System.Linq;
 using System.Runtime.Remoting;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer
@@ -41,7 +40,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         public override bool HasSettings => true;
 
         public MediaPlayerAPI API { get; } = new MediaPlayerAPI();
-        public MediaPlayerCfg Config { get; }
+        public MediaPlayerCfg Config { get; private set; }
         public bool HasExited { get; private set; } = false;
 
         #endregion
@@ -78,10 +77,17 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             }
         }
 
+        private async Task LoadConfig()
+        {
+            Config = await Svc.Configuration.Load<MediaPlayerCfg>() ?? new MediaPlayerCfg();
+        }
+
         /// <inheritdoc />
         protected override void PluginInit()
         {
             VerifyDependenciesExist();
+
+            LoadConfig();
 
             Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedArgs>(OnElementChanged);
 
@@ -99,6 +105,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         public override void Dispose()
         {
             HasExited = true;
+            MediaPlayerState.Instance.PlayerWindow?.Close();
             base.Dispose();
         }
 
@@ -120,9 +127,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         {
             try
             {
-                IControlHtml ctrlHtml = Svc.SM.UI.ElementWdw.ControlGroup.GetFirstHtmlControl();
 
+                IControlHtml ctrlHtml = Svc.SM.UI.ElementWdw.ControlGroup.GetFirstHtmlControl();
                 MediaPlayerState.Instance.OnElementChanged(e.NewElement, ctrlHtml);
+
             }
             catch (RemotingException) { }
         }

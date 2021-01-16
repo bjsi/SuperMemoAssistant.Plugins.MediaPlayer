@@ -71,4 +71,24 @@
   <Target Name="CopyOutput" AfterTargets="Build">
     <Exec Command="xcopy /h /i /c /k /e /r /y &quot;$(TargetDir)*&quot; &quot;%25UserProfile%25\Documents\SuperMemoAssistant\Plugins\Development\$(ProjectName)&quot;" />
   </Target>
+  <ItemGroup>
+    <None Remove="Lua\main.lua" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Lua\curl_telnet_win.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Lua\main.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Lua\subs2srs.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Lua\subs2srs.lua" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Lua\curl_telnet_win.bat" />
+  </ItemGroup>
 </Project>

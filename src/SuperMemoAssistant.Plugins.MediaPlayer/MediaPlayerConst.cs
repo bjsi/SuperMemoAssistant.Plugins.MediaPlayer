@@ -21,8 +21,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         //
         // Elements with data from youtube 
         public const string YouTubeElementFormat = @"<DIV id=media-player-yt-element-title>{0}</DIV>
-<DIV id=media-player-yt-element-filename>{1}</DIV>
-<DIV id=media-player-yt-element-data>{2}</DIV>";
+<DIV id=media-player-yt-element-data>{1}</DIV>";
         public const string YouTubeElementDataFormat = "<DIV id=media-player-yt-element-data>{0}</DIV>";
 
         public static readonly Regex RE_YouTubeElement = new Regex("<DIV id=media-player-yt-element-data>([^<]+)</DIV>", RegexOptions.IgnoreCase);

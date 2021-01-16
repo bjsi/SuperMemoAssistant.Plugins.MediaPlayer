@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Forge.Forms;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
@@ -25,7 +26,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         #region Properties & Fields - Non-Public
 
         private SemaphoreSlim ImportSemaphore { get; } = new SemaphoreSlim(1, 1);
-        private MpvPlayerWindow PlayerWindow { get; set; }
+        public MpvPlayerWindow PlayerWindow { get; private set; }
         private MediaElement LastElement { get; set; }
 
         #endregion
@@ -98,7 +99,12 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             if (await ImportSemaphore.WaitAsync(0) == false)
                 return;
 
-            string idOrUrl = Clipboard.GetText();
+            var res = await Application.Current.Dispatcher.Invoke(() =>
+            {
+                return Show.Dialog().For(new Prompt<string> { Message = "YouTube Id or Url:" });
+            });
+
+            string idOrUrl = res.Model.Value;
 
             if (!string.IsNullOrWhiteSpace(idOrUrl))
                 await YouTubeMediaElement.Create(idOrUrl);

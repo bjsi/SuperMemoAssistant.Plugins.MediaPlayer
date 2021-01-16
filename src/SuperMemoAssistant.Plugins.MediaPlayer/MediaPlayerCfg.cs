@@ -29,6 +29,12 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         [Field(Name = "YouTube Subtitle Languages (IETF language tags separated  by commas)")]
         public string SubtitleLanguages { get; set; } = "en";
 
+        [Field(Name = "Default YouTube Video Quality (youtube-dl format)")]
+        public string YouTubeQuality { get; set; } = "bestvideo[height<=?720][fps<=?30][vcodec!=?vp9]+bestaudio/best";
+
+        [Field(Name = "Include YouTube Thumbnail?")]
+        public bool IncludeYouTubeThumbnail { get; set; }
+
         [Field(Name = "Media Player Host")]
         public string Host { get; set; } = "0.0.0.0";
 
@@ -63,11 +69,10 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                     SelectionType = SelectionType.ComboBox)]
         public ViewMode DefaultViewMode { get; set; } = MediaPlayerConst.DefaultViewMode;
 
-        // TODO: Create sane defaults
         public double WindowTop { get; set; } = 100;
-        public double WindowHeight { get; set; } = 600;
-        public double WindowLeft { get; set; } = 100;
-        public double WindowWidth { get; set; } = 800;
+        public double WindowHeight { get; set; } = 800;
+        public double WindowLeft { get; set; } = 200;
+        public double WindowWidth { get; set; } = 1400;
 
         #region Methods Impl
 

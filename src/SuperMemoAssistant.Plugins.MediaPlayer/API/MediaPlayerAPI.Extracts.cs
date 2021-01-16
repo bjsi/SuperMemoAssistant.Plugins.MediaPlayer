@@ -1,3 +1,4 @@
+using Anotar.Serilog;
 using AustinHarris.JsonRpc;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Contents;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
@@ -63,25 +64,28 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
                 return Image.FromStream(ms);
         }
 
-        private static ContentBase CreateImageContent(Image image, string title)
+        private static ContentBase CreateAudioContent(string base64, string ext, string title)
         {
-            if (image == null)
+            if (string.IsNullOrWhiteSpace(base64))
                 return null;
 
-            int imgRegistryId = Svc.SM.Registry.Image.AddMember(
-                    new ImageWrapper(image),
-                    title
-                    );
+            byte[] bytes = Convert.FromBase64String(base64);
 
-            if (imgRegistryId <= 0)
-                return null;
+            try
+            {
+                string filename = Path.GetTempFileName() + "." + ext; // Makes something like "C:\Temp\blah.tmp.pdf"
+                File.WriteAllBytes(filename, bytes);
 
-            return new ImageContent(imgRegistryId, Config.ImageStretchType);
-        }
+                // TODO: Sound API not added yet
+                // Svc.SM.Registry.Sound.Add()
+                throw new NotImplementedException();
+            }
+            catch (Exception ex)
+            {
+                LogTo.Debug($"Failed to create audio content with exception {ex}");
+            }
 
-        private static ContentBase CreateAudioContent(string base64, string title)
-        {
-            throw new NotImplementedException();
+            return null;
         }
 
         [JsonRpcMethod]

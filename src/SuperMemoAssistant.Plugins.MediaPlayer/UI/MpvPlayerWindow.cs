@@ -1,10 +1,11 @@
-using SuperMemoAssistant.Extensions;
+using Anotar.Serilog;
 using SuperMemoAssistant.Plugins.MediaPlayer.API;
 using SuperMemoAssistant.Plugins.MediaPlayer.Helpers;
 using SuperMemoAssistant.Plugins.MediaPlayer.Models;
 using SuperMemoAssistant.Services;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 {
@@ -25,11 +26,24 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private void BeginMpvProcess()
         {
+            var luaDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lua");
+            var scriptPath = Path.Combine(luaDir, "subs2srs.lua");
+            if (!File.Exists(scriptPath))
+            {
+                LogTo.Debug("MediaPlayer MPV lua script file does not exist");
+            }
+
             var args = new string[]
             {
-                $"--start={Element.StartTime}",
+                $"--start={Element.WatchPoint}",
+                $"--end={Element.EndTime}",
+                $"--speed={Element.DefaultPlaybackRate}",
                 $"--geometry={Config.WindowWidth}x{Config.WindowHeight}+{Config.WindowLeft}+{Config.WindowTop}",
-                $"--script-opts=elementid={Element.ElementId}",
+                $"--script-opts=expected_id={Element.ElementId}",
+                $"--script={scriptPath}",
+                $"--loop-file=inf",
+                $"--ontop",
+                $"--ytdl-format={Config.YouTubeQuality}",
                 $"{Element.Url}"
             };
 
@@ -40,20 +54,20 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
                     FileName        = "mpv",
                     Arguments       = string.Join(" ", args),
                     UseShellExecute = false,
-                    CreateNoWindow  = false, // TODO: test
+                    CreateNoWindow  = false,
+                    WorkingDirectory = luaDir
                 }
             };
 
             MpvProcess.Start();
-
-            /* if (workingDirectory != null) */
-            /*     p.StartInfo.WorkingDirectory = workingDirectory; */
-
         }
 
         public void Close()
         {
-            MpvProcess.CloseMainWindow(); // TODO: Test if this is enough
+            if (MpvProcess != null && !MpvProcess.HasExited)
+            {
+                MpvProcess?.CloseMainWindow();
+            }
         }
     }
 }
