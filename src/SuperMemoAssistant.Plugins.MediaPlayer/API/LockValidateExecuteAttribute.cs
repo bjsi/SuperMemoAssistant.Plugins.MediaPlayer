@@ -15,19 +15,21 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Assembly | AttributeTargets.Module)]
     public class LockValidateExecuteAttribute : Attribute, IMethodDecorator
     {
-        private int ExpectedElementId { get; set; }
+        private int ExpectedElementId { get; set; } = -1;
         private MethodBase Method { get; set; }
 
         public void Init(object instance, MethodBase method, object[] args)
         {
-            ExpectedElementId = (int)args[0];
+            if (args.Length > 0 && args[0] is int expId)
+                ExpectedElementId = expId;
+
             Method = method;
         }
 
         public void OnEntry()
         {
             // Svc.SM.UI.ElementWdw.EnterUIUpdateLock();
-            if (Svc.SM.UI.ElementWdw.CurrentElementId != ExpectedElementId)
+            if (ExpectedElementId > 0 && Svc.SM.UI.ElementWdw.CurrentElementId != ExpectedElementId)
                 throw new Exception(); // TODO: what kind
         }
 

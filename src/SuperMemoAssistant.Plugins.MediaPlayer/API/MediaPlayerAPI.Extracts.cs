@@ -68,7 +68,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
             if (image == null)
                 return null;
 
-            int imgRegistryId = Svc.SM.Registry.Image.Add(
+            int imgRegistryId = Svc.SM.Registry.Image.AddMember(
                     new ImageWrapper(image),
                     title
                     );

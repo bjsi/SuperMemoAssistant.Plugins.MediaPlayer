@@ -26,12 +26,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
         // Learning
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void SMLearn()
         {
             ForwardKeysToSM(new HotKey(Key.L, KeyModifiers.Ctrl));
         }
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void LearnAndReschedule()
         {
             Svc.SM.UI.ElementWdw.ForceRepetitionAndResume(
@@ -41,18 +43,21 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
         }
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void SMReschedule()
         {
             ForwardKeysToSM(new HotKey(Key.J, KeyModifiers.Ctrl));
         }
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void SMLaterToday()
         {
             ForwardKeysToSM(new HotKey(Key.J, KeyModifiers.CtrlShift));
         }
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void SMDone()
         {
             Svc.SM.UI.ElementWdw.ActivateWindow();
@@ -60,6 +65,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
         }
 
         [JsonRpcMethod]
+        [LockValidateExecute]
         public void SMDelete()
         {
             Svc.SM.UI.ElementWdw.ActivateWindow();
@@ -117,7 +123,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
                 Svc.SM.UI.ElementWdw.GoToElement(nextSibling.Id);
         }
 
-        protected bool ForwardKeysToSM(HotKey hotKey,
+        private static bool ForwardKeysToSM(HotKey hotKey,
                                int timeout = 100)
         {
             var handle = Svc.SM.UI.ElementWdw.Handle;

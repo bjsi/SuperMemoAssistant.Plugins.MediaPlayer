@@ -1,12 +1,12 @@
 using Anotar.Serilog;
 using SuperMemoAssistant.Extensions;
+using SuperMemoAssistant.Interop.Plugins;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
 using SuperMemoAssistant.Interop.SuperMemo.Core;
 using SuperMemoAssistant.Plugins.MediaPlayer.API;
 using SuperMemoAssistant.Services;
 using SuperMemoAssistant.Services.IO.HotKeys;
 using SuperMemoAssistant.Services.IO.Keyboard;
-using SuperMemoAssistant.Services.Sentry;
 using SuperMemoAssistant.Services.UI.Configuration;
 using SuperMemoAssistant.Sys.IO.Devices;
 using SuperMemoAssistant.Sys.Remoting;
@@ -18,11 +18,11 @@ using System.Windows.Input;
 namespace SuperMemoAssistant.Plugins.MediaPlayer
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    public class MediaPlayerPlugin : SentrySMAPluginBase<MediaPlayerPlugin>
+    public class MediaPlayerPlugin : SMAPluginBase<MediaPlayerPlugin>
     {
         #region Constructors
 
-        public MediaPlayerPlugin() : base("") { }
+        //public MediaPlayerPlugin() : base("") { }
 
         #endregion
 
@@ -47,14 +47,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         #region Methods Impl
 
         /// <inheritdoc />
-        protected override void OnPluginInitialized()
+        protected override void PluginInit()
         {
-            Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedEventArgs>(OnElementChanged);
+            Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedArgs>(OnElementChanged);
 
             Svc.HotKeyManager.RegisterGlobal(
                     "ImportYouTube",
                     "Import a YouTube video into the Media Player",
-                    HotKeyScopes.SMBrowser,
+                    HotKeyScope.SMBrowser,
                     new HotKey(Key.Y, KeyModifiers.CtrlShift),
                     MediaPlayerState.Instance.ImportYouTubeVideo
                     );
@@ -65,7 +65,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         /// <inheritdoc />
         public override void ShowSettings()
         {
-            // ConfigurationWindow.ShowAndActivate(null, HotKeyManager.Instance, MediaPlayerState.Instance.Config);
+            ConfigurationWindow.ShowAndActivate(HotKeyManager.Instance, MediaPlayerState.Instance.Config);
         }
 
         #endregion
@@ -76,7 +76,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         #region Methods
 
         [LogToErrorOnException]
-        public static void OnElementChanged(SMDisplayedElementChangedEventArgs e)
+        public static void OnElementChanged(SMDisplayedElementChangedArgs e)
         {
             try
             {

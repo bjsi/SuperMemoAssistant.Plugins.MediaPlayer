@@ -1,5 +1,6 @@
 using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Plugins.MediaPlayer.API;
+using SuperMemoAssistant.Plugins.MediaPlayer.Helpers;
 using SuperMemoAssistant.Plugins.MediaPlayer.Models;
 using SuperMemoAssistant.Services;
 using System;

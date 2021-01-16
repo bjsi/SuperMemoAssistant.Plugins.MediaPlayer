@@ -30,14 +30,18 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         #endregion
 
-
+    
+        private async Task LoadConfigAsync()
+        {
+            Config = await Svc.Configuration.Load<MediaPlayerCfg>() ?? new MediaPlayerCfg();
+        }
 
 
         #region Constructors
 
         public MediaPlayerState()
         {
-            Config = Svc.Configuration.Load<MediaPlayerCfg>() ?? new MediaPlayerCfg();
+            LoadConfigAsync();
         }
 
         #endregion
@@ -47,7 +51,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         #region Properties & Fields - Public
 
-        public MediaPlayerCfg Config { get; }
+        public MediaPlayerCfg Config { get; set; }
 
         #endregion
 
@@ -144,9 +148,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             CreateVideoWindow(ivElem);
         }
 
-        public Task SaveConfigAsync()
+        public void SaveConfig()
         {
-            return Svc.Configuration.SaveAsync(Config);
+            Svc.Configuration.Save(Config);
         }
 
         private void CreateVideoWindow(YouTubeMediaElement el)
