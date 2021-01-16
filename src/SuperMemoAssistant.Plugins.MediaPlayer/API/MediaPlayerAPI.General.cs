@@ -1,14 +1,16 @@
-﻿using SuperMemoAssistant.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AustinHarris.JsonRpc;
+using SuperMemoAssistant.Services;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer.API
 {
     public partial class MediaPlayerAPI
     {
         private static MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
+
+        [JsonRpcMethod]
+        public string HelloWorld()
+        {
+            return "hello world!";
+        }
     }
 }

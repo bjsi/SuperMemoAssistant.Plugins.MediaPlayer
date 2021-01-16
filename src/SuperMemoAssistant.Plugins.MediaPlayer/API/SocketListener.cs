@@ -14,13 +14,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
     {
 
         private static MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
-        public static bool HasExited { get; set; }
+        private static bool HasExited => Svc<MediaPlayerPlugin>.Plugin.HasExited;
 
         public static async Task Start()
         {
-            var server = new TcpListener(IPAddress.Parse(Config.Host), Config.Port);
+            // TODO: Config.Host, Config.Port not working
+            var server = new TcpListener(IPAddress.Parse("0.0.0.0"), 9898);
             server.Start();
-            LogTo.Information($"MediaPlayer API running");
+            LogTo.Debug($"MediaPlayer API started");
             while (!HasExited)
             {
                 try
@@ -29,22 +30,29 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
                     using (var stream = client.GetStream())
                     {
                         LogTo.Debug("Client connected to MediaPlayer socket");
+
                         var reader = new StreamReader(stream, Encoding.UTF8);
                         var writer = new StreamWriter(stream, new UTF8Encoding(false));
+
                         var line = await reader.ReadLineAsync();
                         LogTo.Debug("MediaPlayer API received data from client: " + line);
+
                         var response = await JsonRpcProcessor.Process(line);
+                        LogTo.Debug("MediaPlayer API responsded to client: " + response);
+
                         await writer.WriteLineAsync(response);
                         await writer.FlushAsync();
+
                         client.Close();
                     }
                 }
                 catch (Exception e)
                 {
-                    LogTo.Information($"MediaPlayer API caught exception {e}");
+                    LogTo.Debug($"MediaPlayer API caught exception {e}");
                 }
             }
 
+            LogTo.Debug("MediaPlayer API shutting down");
             server.Stop();
         }
     }

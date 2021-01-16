@@ -1,4 +1,5 @@
 using Anotar.Serilog;
+using CliWrap;
 using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Interop.Plugins;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
@@ -10,6 +11,7 @@ using SuperMemoAssistant.Services.IO.Keyboard;
 using SuperMemoAssistant.Services.UI.Configuration;
 using SuperMemoAssistant.Sys.IO.Devices;
 using SuperMemoAssistant.Sys.Remoting;
+using System.Linq;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,15 +42,47 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
         public MediaPlayerAPI API { get; } = new MediaPlayerAPI();
         public MediaPlayerCfg Config { get; }
+        public bool HasExited { get; private set; } = false;
 
         #endregion
 
 
         #region Methods Impl
 
+        private async Task<bool> CheckProgramInPath(string program)
+        {
+            var result = await Cli.Wrap("where")
+                .WithArguments("/q " + program)
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync();
+            return result.ExitCode == 0;
+        }
+        
+        public async Task VerifyDependenciesExist()
+        {
+            var programs = new string[] { "youtube-dl", "ffmpeg", "mpv" };
+            var result = await Task.WhenAll(programs.Select(CheckProgramInPath));
+            if (result.Any(isInstalled => !isInstalled))
+            {
+                string missingPrograms = string.Join(", ",
+                    programs
+                    .Zip(result, (program, installed) => (program, installed))
+                    .Where(res => !res.installed)
+                    .Select(res => res.program));
+
+                LogTo.Debug("MediaPlayer dependencies not found in path: " + missingPrograms);
+            }
+            else
+            {
+                LogTo.Debug("All MediaPlayer dependencies found in path");
+            }
+        }
+
         /// <inheritdoc />
         protected override void PluginInit()
         {
+            VerifyDependenciesExist();
+
             Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedArgs>(OnElementChanged);
 
             Svc.HotKeyManager.RegisterGlobal(
@@ -59,7 +93,13 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                     MediaPlayerState.Instance.ImportYouTubeVideo
                     );
 
-            _ = Task.Factory.StartNew(SocketListener.Start, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            Task.Run(SocketListener.Start);
+        }
+
+        public override void Dispose()
+        {
+            HasExited = true;
+            base.Dispose();
         }
 
         /// <inheritdoc />

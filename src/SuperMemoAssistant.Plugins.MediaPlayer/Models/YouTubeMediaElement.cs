@@ -60,22 +60,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             string uploaderId = (string)metadata["uploader_id"];
             string creationDate = (string)metadata["upload_date"];
 
-            try
+            ytEl = new YouTubeMediaElement
             {
-                ytEl = new YouTubeMediaElement
-                {
-                    Id = youtubeId,
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    WatchPoint = watchPoint,
-                    ViewMode = viewMode,
-                };
-            }
-            catch (Exception ex)
-            {
-                LogTo.Error(ex, "Exception thrown while creating new Advanced Media Player YouTube element");
-                return CreationResult.FailUnknown;
-            }
+                Id = youtubeId,
+                StartTime = startTime,
+                EndTime = endTime,
+                WatchPoint = watchPoint,
+                ViewMode = viewMode,
+            };
 
             string elementHtml = string.Format(CultureInfo.InvariantCulture,
                                                MediaPlayerConst.YouTubeElementFormat,
@@ -98,7 +90,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                         .WithAuthor($"{uploader} (id={uploaderId})")
                         .WithDate(creationDate)
                         .WithSource("YouTube")
-                        .WithLink($"https://www.youtube.com/watch?v=" + youtubeId)
+                        .WithLink(ytEl.Url)
                 );
 
             if (shouldDisplay == false)
@@ -158,7 +150,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                         .WithAuthor(uploader)
                         .WithDate(creationDate)
                         .WithSource("YouTube")
-                        .WithLink($"https://www.youtube.com/watch?v=" + videoId)
+                        .WithLink(ytEl.Url)
                 );
 
             if (shouldDisplay == false)

@@ -21,7 +21,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
         public void Init(object instance, MethodBase method, object[] args)
         {
             if (args.Length > 0 && args[0] is int expId)
+            {
                 ExpectedElementId = expId;
+            }
 
             Method = method;
         }
