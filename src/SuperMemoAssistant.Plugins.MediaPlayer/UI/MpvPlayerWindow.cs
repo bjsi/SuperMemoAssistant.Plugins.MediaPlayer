@@ -14,13 +14,16 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private Process MpvProcess { get; set; }
         private YouTubeMediaElement Element { get; }
-        public MediaPlayerAPI API => Svc<MediaPlayerPlugin>.Plugin.API;
-        private MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
+        private static MediaPlayerCfg Config => Svc<MediaPlayerPlugin>.Plugin.Config;
+        private static JsonRpcServer Server => Svc<MediaPlayerPlugin>.Plugin.JsonRpcServer;
+        public MediaPlayerAPI API { get; }
 
-        public MpvPlayerWindow(YouTubeMediaElement element)
+        public MpvPlayerWindow(YouTubeMediaElement element, int elementId)
         {
             element.ThrowIfArgumentNull("Failed to open Mpv Player Window because media element is null");
             Element = element;
+            API = new MediaPlayerAPI(element, elementId);
+            Server.RegisterService(API);
             BeginMpvProcess();
         }
 
@@ -37,11 +40,11 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
             {
                 $"--start={Element.WatchPoint}",
                 $"--end={Element.EndTime}",
+                $"--loop-file=inf",
                 $"--speed={Element.DefaultPlaybackRate}",
                 $"--geometry={Config.WindowWidth}x{Config.WindowHeight}+{Config.WindowLeft}+{Config.WindowTop}",
                 $"--script-opts=expected_id={Element.ElementId}",
                 $"--script={scriptPath}",
-                $"--loop-file=inf",
                 $"--ontop",
                 $"--ytdl-format={Config.YouTubeQuality}",
                 $"{Element.Url}"
@@ -64,10 +67,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         public void Close()
         {
+            Server.RevokeService();
             if (MpvProcess != null && !MpvProcess.HasExited)
-            {
                 MpvProcess?.CloseMainWindow();
-            }
         }
     }
 }

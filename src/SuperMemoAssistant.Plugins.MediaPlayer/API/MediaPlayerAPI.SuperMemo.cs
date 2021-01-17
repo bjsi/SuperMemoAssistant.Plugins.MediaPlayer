@@ -8,7 +8,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.API
 {
     // Implements Basic SM Functions
     // TODO: When new Interop available: Lock UI, check elementId is expectedId, then execute
-    public partial class MediaPlayerAPI : JsonRpcService
+    public partial class MediaPlayerAPI
     {
 
         public event EventHandler Closed;

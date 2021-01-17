@@ -39,9 +39,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         public override string Name => "MediaPlayerPlugin";
         public override bool HasSettings => true;
 
-        public MediaPlayerAPI API { get; } = new MediaPlayerAPI();
         public MediaPlayerCfg Config { get; private set; }
         public bool HasExited { get; private set; } = false;
+        public JsonRpcServer JsonRpcServer { get; } = new JsonRpcServer();
 
         #endregion
 
@@ -89,6 +89,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             LoadConfig();
 
+            MediaPlayerFilesystem.EnsureFoldersExist();
+
             Svc.SM.UI.ElementWdw.OnElementChanged += new ActionProxy<SMDisplayedElementChangedArgs>(OnElementChanged);
 
             Svc.HotKeyManager.RegisterGlobal(
@@ -99,13 +101,13 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
                     MediaPlayerState.Instance.ImportYouTubeVideo
                     );
 
-            Task.Run(SocketListener.Start);
+            Task.Run(JsonRpcServer.StartAsync); // TODO: Depends on config task
         }
 
         public override void Dispose()
         {
-            HasExited = true;
             MediaPlayerState.Instance.PlayerWindow?.Close();
+            HasExited = true;
             base.Dispose();
         }
 

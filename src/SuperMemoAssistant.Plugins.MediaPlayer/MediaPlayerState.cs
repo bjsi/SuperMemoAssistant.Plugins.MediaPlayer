@@ -74,21 +74,21 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             var html = ctrlHtml?.Text ?? string.Empty;
 
-            var ivEl = newElem.Type == ElementType.Topic
+            var ytEl = newElem.Type == ElementType.Topic
               ? YouTubeMediaElement.TryReadElement(html, newElem.Id)
               : null;
 
-            bool noNewElem = ivEl == null;
+            bool noNewElem = ytEl == null;
             bool noLastElem = LastElement == null || (Svc.SM.Registry.Element[LastElement.ElementId]?.Deleted ?? true);
 
             if (noNewElem && noLastElem)
                 return;
 
-            bool close = LastElement != null && ivEl == null;
+            bool close = LastElement != null && ytEl == null;
 
             CloseElement();
 
-            OpenElement(ivEl);
+            OpenElement(ytEl, newElem.Id);
 
             if (close)
                 PlayerWindow?.Close();
@@ -144,14 +144,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             }
         }
 
-        private void OpenElement(YouTubeMediaElement ivElem)
+        private void OpenElement(YouTubeMediaElement ivElem, int elementId)
         {
             if (ivElem == null)
                 return;
 
             LastElement = ivElem;
 
-            CreateVideoWindow(ivElem);
+            CreateVideoWindow(ivElem, elementId);
         }
 
         public void SaveConfig()
@@ -159,9 +159,9 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
             Svc.Configuration.Save(Config);
         }
 
-        private void CreateVideoWindow(YouTubeMediaElement el)
+        private void CreateVideoWindow(YouTubeMediaElement el, int elementId)
         {
-            PlayerWindow = new MpvPlayerWindow(el);
+            PlayerWindow = new MpvPlayerWindow(el, elementId);
             PlayerWindow.API.Closed += VideoWindow_Closed;
         }
 

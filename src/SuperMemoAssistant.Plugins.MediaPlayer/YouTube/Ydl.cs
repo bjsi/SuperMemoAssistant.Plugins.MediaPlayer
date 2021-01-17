@@ -102,20 +102,21 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.YouTube
             return outputFile;
         }
 
-        public static async Task<string> GifExtract(string videoStream, double start, double end, string outputFile)
+        public static async Task<bool> GifExtract(string videoStream, double start, double end, string outputFile)
         {
             try
             {
                 var res = await Cli.Wrap("ffmpeg")
                     .WithArguments($"-ss {start} -i \"{videoStream}\" -map 0:v -t {end - start} -r 15 -vf scale=512:-1 {outputFile}")
                     .ExecuteAsync();
+                return true;
             }
             catch (Exception e)
             {
                 LogTo.Error($"Ffmpeg gif extract failed with exception {e}");
-                return null;
             }
-            return outputFile;
+
+            return false;
         }
     }
 }

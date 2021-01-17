@@ -1,51 +1,22 @@
 using HtmlAgilityPack;
+using SuperMemoAssistant.Interop.SuperMemo.Content.Controls;
+using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
+using System;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace SuperMemoAssistant.Plugins.MediaPlayer.Helpers
 {
-    public class References
-    {
-        //
-        // Summary:
-        //     Notes about the given content
-        public string Comment { get; set; }
-        //
-        // Summary:
-        //     The original uri for the given content
-        public string Link { get; set; }
-        //
-        // Summary:
-        //     The original source for the given content
-        public string Source { get; set; }
-
-        public string Date { get; set; }
-        //
-        // Summary:
-        //     The title for the given content
-        public string Title { get; set; }
-        //
-        // Summary:
-        //     The original author for the given content
-        public string Author { get; set; }
-        //
-        // Summary:
-        //     The email from which the given content was extracted
-        public string Email { get; set; }
-    }
-
     public static class ReferenceParser
     {
-
-        // Grab refs from the current element
-
         /// <summary>
         /// Takes element content html string and returns References object.
         /// </summary>
         /// <param name="content"></param>
         /// <returns>References object or null</returns>
-        public static References GetReferences(string content)
+        public static References GetReferences(this IControlHtml htmlCtrl)
         {
-
+            string content = htmlCtrl?.Text;
             if (string.IsNullOrEmpty(content))
                 return null;
 
@@ -63,14 +34,17 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Helpers
             // Get each reference as a string and add to the reference object
             refs.Author = GetReference(referenceString, "Author");
             refs.Comment = GetReference(referenceString, "Comment");
-            refs.Date = GetReference(referenceString, "Date");
+
+            var dateStr = GetReference(referenceString, "Date");
+            var success = DateTime.TryParse(dateStr, out var dt);
+            refs.Dates.Add(("", success ? dt : null));
+
             refs.Email = GetReference(referenceString, "Email");
             refs.Link = GetReference(referenceString, "Link");
             refs.Source = GetReference(referenceString, "Source");
             refs.Title = GetReference(referenceString, "Title");
 
             return refs;
-
         }
 
         /// <summary>
@@ -101,7 +75,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Helpers
             if (string.IsNullOrEmpty(referenceHtml))
                 return string.Empty;
 
-            string pattern = string.Format(@"#{0}: (.*?)<br>", refName);
+            string pattern = string.Format(CultureInfo.InvariantCulture, @"#{0}: (.*?)<br>", refName);
             Regex regex = new Regex(pattern);
             Match match = regex.Match(referenceHtml);
 

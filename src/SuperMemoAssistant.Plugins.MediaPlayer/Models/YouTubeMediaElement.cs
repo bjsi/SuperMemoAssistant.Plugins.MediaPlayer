@@ -12,8 +12,6 @@ using Newtonsoft.Json.Linq;
 using SuperMemoAssistant.Extensions;
 using SuperMemoAssistant.Interop.SuperMemo.Content.Contents;
 using SuperMemoAssistant.Interop.SuperMemo.Elements.Builders;
-using SuperMemoAssistant.Interop.SuperMemo.Elements.Models;
-using SuperMemoAssistant.Interop.SuperMemo.Elements.Types;
 using SuperMemoAssistant.Plugins.MediaPlayer.Helpers;
 using SuperMemoAssistant.Plugins.MediaPlayer.YouTube;
 using SuperMemoAssistant.Services;
@@ -25,7 +23,6 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
     {
         #region Constructors
 
-        // TODO: Support playlists
         public YouTubeMediaElement()
         {
         }
@@ -65,8 +62,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             string youtubeId = (string)metadata["id"];
             string title = (string)metadata["title"];
             string uploader = (string)metadata["uploader"];
-            string uploaderId = (string)metadata["uploader_id"];
-            string creationDate = (string)metadata["upload_date"];
+            string date = (string)metadata["upload_date"];
             string thumbnailUrl = (string)metadata["thumbnail"];
 
             ytEl = new YouTubeMediaElement
@@ -96,7 +92,14 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                 }
             }
 
-            return CreateSMElement(parentElementId, contents, title, uploader, creationDate, ytEl.Url, shouldDisplay);
+            var refs = new References()
+                .WithTitle(title)
+                .WithAuthor(uploader)
+                .WithDate(HumanReadableDate(date))
+                .WithLink(ytEl.Url);
+
+            var priority = MediaPlayerConst.DefaultExtractPriority;
+            return ContentEx.CreateSMElement(parentElementId, priority, contents, refs, shouldDisplay);
         }
 
         private static string HumanReadableDate(string date) 
@@ -114,9 +117,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
             return dt.ToString(CultureInfo.InvariantCulture);
         }
 
-        public static CreationResult Create(
+        public CreationResult Create(
                 int parentElementId,
-                string videoId,
                 double startTime,
                 double endTime,
                 double watchPoint,
@@ -124,64 +126,29 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                 bool shouldDisplay)
         {
 
-            var html = ContentEx.GetCurrentElementContent();
+            var html = ContentEx.GetFirstHtmlCtrl();
             var refs = ReferenceParser.GetReferences(html);
             if (refs == null)
                 return CreationResult.FailUnknown;
 
-            string title = refs.Title;
-            string uploader = refs.Author;
-            string creationDate = refs.Date;
-
             var ytEl = new YouTubeMediaElement
             {
-                Id = videoId,
+                Id = this.Id,
                 StartTime = startTime,
                 EndTime = endTime,
                 WatchPoint = watchPoint,
                 ViewMode = viewMode,
             };
 
+            refs.Title += $": {startTime} -> {endTime}";
             string elementHtml = string.Format(CultureInfo.InvariantCulture,
                                                MediaPlayerConst.YouTubeElementFormat,
-                                               title,
+                                               refs.Title,
                                                ytEl.GetJsonB64());
 
             var contents = new List<ContentBase> { new TextContent(true, elementHtml) };
-
-            return CreateSMElement(parentElementId, contents, title, uploader, creationDate, ytEl.Url, shouldDisplay);
-
-        }
-
-        private static CreationResult CreateSMElement(int parentElId, List<ContentBase> contents, string title,
-                                                      string uploader, string creationDate, string url,
-                                                      bool shouldDisplay)
-        {
-            IElement parentElement =
-              parentElId > 0
-                ? Svc.SM.Registry.Element[parentElId]
-                : null;
-
-            var elemBuilder =
-              new ElementBuilder(ElementType.Topic,
-                                 contents.ToArray())
-                .WithParent(parentElement)
-                .WithTitle(title)
-                .WithPriority(MediaPlayerState.Instance.Config.DefaultExtractPriority)
-                .WithReference(
-                  r => r.WithTitle(title)
-                        .WithAuthor(uploader)
-                        .WithDate(HumanReadableDate(creationDate))
-                        .WithSource("YouTube")
-                        .WithLink(url)
-                );
-
-            if (shouldDisplay == false)
-                elemBuilder = elemBuilder.DoNotDisplay();
-
-            return Svc.SM.Registry.Element.Add(out _, ElemCreationFlags.CreateSubfolders, elemBuilder)
-              ? CreationResult.Ok
-              : CreationResult.FailCannotCreateElement;
+            var priority = MediaPlayerConst.DefaultExtractPriority;
+            return ContentEx.CreateSMElement(parentElementId, priority, contents, refs, shouldDisplay);
         }
 
         private static Image DownloadThumbnail(string url)
@@ -193,7 +160,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
                     byte[] bytes = wc.DownloadData(url);
                     if (bytes != null)
                     {
-                        MemoryStream ms = new MemoryStream(bytes);
+                        using (MemoryStream ms = new MemoryStream(bytes))
                         if (ms != null)
                         {
                             return Image.FromStream(ms);

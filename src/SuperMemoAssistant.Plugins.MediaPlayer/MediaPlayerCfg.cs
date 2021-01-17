@@ -33,7 +33,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
         public string YouTubeQuality { get; set; } = "bestvideo[height<=?720][fps<=?30][vcodec!=?vp9]+bestaudio/best";
 
         [Field(Name = "Include YouTube Thumbnail?")]
-        public bool IncludeYouTubeThumbnail { get; set; }
+        public bool IncludeYouTubeThumbnail { get; set; } = true;
 
         [Field(Name = "Media Player Host")]
         public string Host { get; set; } = "0.0.0.0";

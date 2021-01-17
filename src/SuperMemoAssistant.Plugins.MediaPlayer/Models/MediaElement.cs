@@ -88,7 +88,8 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.Models
         FailCannotCreateElement,
         // TODO: Not using video registry
         FailVideoRegistryInsertionFailed,
-        FailVideoMemberFileMissing
+        FailVideoMemberFileMissing,
+        Name
     }
 
     public enum SaveResult
