@@ -1,0 +1,3 @@
+[submodule "src/SuperMemoAssistant.Plugins.MediaPlayer/mpvacious"]
+	path = src/SuperMemoAssistant.Plugins.MediaPlayer/mpvacious
+	url = https://github.com/bjsi/mpvacious

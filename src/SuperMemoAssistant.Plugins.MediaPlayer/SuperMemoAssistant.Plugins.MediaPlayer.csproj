@@ -72,23 +72,31 @@
     <Exec Command="xcopy /h /i /c /k /e /r /y &quot;$(TargetDir)*&quot; &quot;%25UserProfile%25\Documents\SuperMemoAssistant\Plugins\Development\$(ProjectName)&quot;" />
   </Target>
   <ItemGroup>
-    <None Remove="Lua\main.lua" />
+    <None Remove="mpvacious\curl_telnet_win.bat" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Lua\curl_telnet_win.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Lua\main.lua">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Lua\subs2srs.lua">
+    <Content Include="mpvacious\curl_telnet_win.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Lua\subs2srs.lua" />
+    <None Remove="mpvacious\file2base64_win.bat" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Lua\curl_telnet_win.bat" />
+    <Content Include="mpvacious\file2base64_win.bat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="mpvacious\main.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="mpvacious\subs2srs.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="mpvacious\subs2srs.lua" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="mpvacious\main.lua" />
   </ItemGroup>
 </Project>
