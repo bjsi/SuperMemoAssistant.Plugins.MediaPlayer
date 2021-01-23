@@ -29,7 +29,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer.UI
 
         private void BeginMpvProcess()
         {
-            var luaDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Lua");
+            var luaDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mpvacious");
             var scriptPath = Path.Combine(luaDir, "subs2srs.lua");
             if (!File.Exists(scriptPath))
             {

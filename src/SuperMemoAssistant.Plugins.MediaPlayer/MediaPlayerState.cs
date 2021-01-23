@@ -101,7 +101,7 @@ namespace SuperMemoAssistant.Plugins.MediaPlayer
 
             var res = await Application.Current.Dispatcher.Invoke(() =>
             {
-                return Show.Dialog().For(new Prompt<string> { Message = "YouTube Id or Url:" });
+                return Show.Window().For(new Prompt<string> { Message = "YouTube Id or Url:" });
             });
 
             string idOrUrl = res.Model.Value;
